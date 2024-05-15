@@ -10,18 +10,23 @@ import { useState } from 'react';
 import { toast} from 'react-toastify'
 
 import { Company as CompanyType, companySchema } from '../types/Company';
+import { useWindowWidth } from '../hooks/useWindowWidth';
 
-type Props = {}
+type Props = {
+  submitCompany: (value: CompanyType) => void;
+}
 
-const CompanyForm = (props: Props) => {
+const CompanyForm = ({submitCompany}: Props) => {
   
     const [formData, setFormData] = useState<CompanyType>({
         name: '',
         email: '',
         numberOfEmployees: 0,
-        description: ''
+        description: '',
+        employees: [],
       })
     
+      
       const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           const {name, value} = event.currentTarget;
     
@@ -30,26 +35,28 @@ const CompanyForm = (props: Props) => {
             [name]: name==="numberOfEmployees" ? parseInt(value,10) : value
           }))
       }
-    
       const handleSubmit = () => {
         const errors = companySchema.safeParse(formData).error;
         
         if(!errors){
-          //toast
-    
-          toast('Company created!', {
-            type: "success"
-          })
+          toast.dismiss();
+          toast.success('Company created!')
+          submitCompany(formData);
         }else{
-          errors.errors.forEach(error => toast(error.message, {type: "error"}))
+          toast.dismiss();
+          errors.errors.forEach(error => {
+            toast.dismiss();
+            toast(error.message, {type: "error"})
+          })
         }
       }
-    
-      const textfieldStyle = "bg-slate-100 w-[400px]";
+
+      const windowWidth = useWindowWidth();
+      const textfieldStyle = `bg-slate-100 ${windowWidth <= 400? "w-[300px]" : windowWidth <= 600 ? "w-[350px]" : "w-[400px]"}`;
       return (
-        
-         <Box className='flex flex-col gap-8' component='form'>
-          <span className='text-3xl text-slate-700 font-semibold'>Company informations</span>
+          
+        <Box className={`flex flex-col justify-center items-center gap-8`} component='form'>
+          <div className={`${windowWidth <= 600 ? "text-xl" : "text-3xl"} text-slate-700 font-semibold`}>Company informations</div>
          <TextField className={textfieldStyle} name='name' value={formData.name} variant='outlined' InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -80,7 +87,6 @@ const CompanyForm = (props: Props) => {
             }} onChange={handleChange} label="Description"/>
             <Button  onClick={handleSubmit} sx={{backgroundColor: "#806DD6" , borderRadius: "10px",height: "50px",":hover": {color: "white",backgroundColor: "#806DD6" }}} variant="contained">Continue to add employee [ 1 / {formData.numberOfEmployees === 0 ? 1 : formData.numberOfEmployees} ]</Button>
          </Box>
-
       );
 }
 

@@ -1,17 +1,13 @@
 import {z} from 'zod'
 
-const allowedJobs = z.enum(["accountant", "software developer", " software tester", " manager"])
 
-const isPdfFile = (file: File):boolean =>{
-    return file.type ==="pdf";
-}
-
-const employeeSchema = z.object({
-    name: z.string(),
+export const employeeSchema = z.object({
+    name: z.string().min(4),
     email: z.string().email('This is not a valid email address'),
-    job:  allowedJobs,
+    job: z.custom((job) => ["manager", "accountant", "software developer", "software tester"].includes(job)),
     age: z.number().min(18).max(120),
-    cv: z.instanceof(File).refine((file) => isPdfFile(file), 'Only .pdf formats are supported.')
-})
-
+    cv: z.custom((file) => file instanceof File && file.type === 'application/pdf', {
+        message: 'A feltöltött fájl nem PDF formátumú.',
+      })
+});
 export type Employee = z.infer<typeof employeeSchema>;
